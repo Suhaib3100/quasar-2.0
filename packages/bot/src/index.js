@@ -79,26 +79,22 @@ client.once('ready', () => {
     console.log('\nNote: Users gain XP by chatting in text channels');
 });
 
-// Add interaction handler
+// Simplified interaction handler
 client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
-
-    if (!command) {
-        console.error(`No command matching ${interaction.commandName} was found.`);
-        return;
-    }
+    if (!command) return;
 
     try {
         await command.execute(interaction);
     } catch (error) {
-        console.error(`Error executing ${interaction.commandName}:`);
-        console.error(error);
-        if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
-        } else {
-            await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+        console.error(`Error executing ${interaction.commandName}:`, error);
+        try {
+            const message = { content: 'An error occurred!', ephemeral: true };
+            if (!interaction.replied) await interaction.reply(message);
+        } catch (e) {
+            console.error('Error sending error message:', e);
         }
     }
 });
