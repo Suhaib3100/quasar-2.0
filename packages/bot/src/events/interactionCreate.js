@@ -1,10 +1,50 @@
 const { Events, EmbedBuilder } = require('discord.js');
 const { getDefaultPool } = require('discord-moderation-shared');
+const { hasPermission } = require('../utils/permissionUtils');
 const db = getDefaultPool();
 
 module.exports = {
     name: Events.InteractionCreate,
     async execute(interaction) {
+        // Handle slash commands
+        if (interaction.isChatInputCommand()) {
+            const command = interaction.client.commands.get(interaction.commandName);
+
+            if (!command) {
+                console.error(`No command matching ${interaction.commandName} was found.`);
+                return;
+            }
+
+            try {
+                // Check if command has required permissions
+                if (command.permissions && !hasPermission(interaction.user.id, command.permissions, interaction.member)) {
+                    return await interaction.reply({
+                        content: 'You do not have permission to use this command.',
+                        ephemeral: true
+                    });
+                }
+
+                await command.execute(interaction);
+            } catch (error) {
+                console.error(`Error executing ${interaction.commandName}`);
+                console.error(error);
+
+                if (interaction.replied || interaction.deferred) {
+                    await interaction.followUp({
+                        content: 'There was an error while executing this command!',
+                        ephemeral: true
+                    });
+                } else {
+                    await interaction.reply({
+                        content: 'There was an error while executing this command!',
+                        ephemeral: true
+                    });
+                }
+            }
+            return;
+        }
+
+        // Handle button interactions
         if (!interaction.isButton()) return;
 
         const buttonId = interaction.customId;

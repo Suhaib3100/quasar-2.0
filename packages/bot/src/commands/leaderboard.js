@@ -48,7 +48,10 @@ module.exports = {
                         username: member.user.username,
                         level: user.level,
                         xp: user.xp,
-                        nextLevelXP: nextLevelXP
+                        nextLevelXP: nextLevelXP,
+                        avatarURL: member.user.displayAvatarURL({ extension: 'png', size: 256 }),
+                        userId: member.user.id,
+                        discriminator: member.user.discriminator || '0'
                     });
                 }
             }
@@ -57,7 +60,7 @@ module.exports = {
                 return await interaction.editReply('No valid users found in the leaderboard!');
             }
 
-            const leaderboardImage = await CanvasUtils.createLeaderboardImage(formattedUsers, interaction.guild);
+            const leaderboardImage = await CanvasUtils.createLeaderboardImage(formattedUsers);
             const attachment = new AttachmentBuilder(leaderboardImage, { name: 'leaderboard.png' });
 
             await interaction.editReply({

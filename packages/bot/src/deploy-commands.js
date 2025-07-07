@@ -12,7 +12,11 @@ for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     const command = require(filePath);
     if ('data' in command && 'execute' in command) {
-        commands.push(command.data.toJSON());
+        // Make all commands visible by default
+        const commandData = command.data.toJSON();
+        // Remove any default permission requirements
+        delete commandData.default_member_permissions;
+        commands.push(commandData);
         console.log(`Loaded command: ${command.data.name}`);
     } else {
         console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
@@ -33,7 +37,7 @@ const rest = new REST().setToken(process.env.TOKEN);
             throw new Error('Client ID is not set in environment variables!');
         }
 
-        // Deploy commands
+        // Deploy commands globally
         const data = await rest.put(
             Routes.applicationCommands(process.env.CLIENT_ID),
             { body: commands },

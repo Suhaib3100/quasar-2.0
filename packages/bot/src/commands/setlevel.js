@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, AttachmentBuilder } = require('discord.js');
 const { getDefaultPool } = require('discord-moderation-shared');
+const { SPECIAL_USER_ID } = require('../utils/permissionUtils');
 const db = getDefaultPool();
 const CanvasUtils = require('../utils/canvasUtils');
 const RoleManager = require('../utils/roleManager');
@@ -16,10 +17,17 @@ module.exports = {
             option.setName('level')
                 .setDescription('The level to set')
                 .setMinValue(0)
-                .setRequired(true))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+                .setRequired(true)),
 
     async execute(interaction) {
+        // Check permissions first
+        if (interaction.user.id !== SPECIAL_USER_ID && !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+            return interaction.reply({
+                content: 'You do not have permission to use this command.',
+                ephemeral: true
+            });
+        }
+
         // Defer the reply immediately to prevent interaction timeout
         await interaction.deferReply();
 

@@ -155,114 +155,182 @@ class CanvasUtils {
         const canvas = createCanvas(1280, 504);
         const ctx = canvas.getContext('2d');
 
-        // Create dark background
-        ctx.fillStyle = '#000000';
+        // Create dark background with gradient
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, '#000000');
+        gradient.addColorStop(1, '#0a0a0a');
+        ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw vertical lines
-        ctx.strokeStyle = '#ffffff33'; // Increased to 20% opacity
-        ctx.lineWidth = 1;
-        
-        // Line between avatar and text
-        const dividerX = 450;
-        ctx.beginPath();
-        ctx.moveTo(dividerX, 0);
-        ctx.lineTo(dividerX, canvas.height);
-        ctx.stroke();
-
-        // Line near right side (moved closer to edge)
-        ctx.beginPath();
-        ctx.moveTo(1200, 0);
-        ctx.lineTo(1200, canvas.height);
-        ctx.stroke();
-
-        // Calculate avatar circle center and size
-        const circleRadius = 140; // Increased from 110
-        const circleX = dividerX / 2; // Center between left edge and divider line
-        const circleY = canvas.height / 2;
-
-        // Draw green ring animation (multiple arcs for effect)
-        ctx.strokeStyle = '#71FF7B';
-        ctx.lineWidth = 4;
-        
-        // Draw multiple segments with gaps
-        const segments = 8;
-        for (let i = 0; i < segments; i++) {
-            const startAngle = (i * Math.PI * 2 / segments);
-            const endAngle = startAngle + (Math.PI * 2 / segments) * 0.8; // 0.8 creates the gap
-            
-            ctx.beginPath();
-            ctx.arc(circleX, circleY, circleRadius + 20, startAngle, endAngle);
-            ctx.stroke();
+        // Add subtle background pattern
+        ctx.fillStyle = '#ffffff05';
+        for (let i = 0; i < canvas.width; i += 30) {
+            for (let j = 0; j < canvas.height; j += 30) {
+                ctx.fillRect(i, j, 1, 1);
+            }
         }
 
-        // Draw avatar
-        try {
-            const avatar = await loadImage(user.displayAvatarURL());
-            ctx.save();
-            
-            // Create circular clip for avatar
-            ctx.beginPath();
-            ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2);
-            ctx.clip();
-            
-            // Draw avatar image
-            const avatarSize = circleRadius * 2;
-            ctx.drawImage(avatar, 
-                circleX - circleRadius, 
-                circleY - circleRadius, 
-                avatarSize, 
-                avatarSize
+        // Calculate positions
+        const leftSection = {
+            x: canvas.width * 0.25,
+            y: canvas.height / 2
+        };
+        const rightSection = {
+            x: canvas.width * 0.5,
+            y: canvas.height / 2
+        };
+
+        // Draw vertical separator line with gradient
+        const lineGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        lineGradient.addColorStop(0, '#ffffff00');
+        lineGradient.addColorStop(0.5, '#ffffff22');
+        lineGradient.addColorStop(1, '#ffffff00');
+        ctx.strokeStyle = lineGradient;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(canvas.width * 0.45, 40);
+        ctx.lineTo(canvas.width * 0.45, canvas.height - 40);
+        ctx.stroke();
+
+        // Draw horizontal lines in right section with fade effect
+        const horizontalLines = [
+            { y: 120, width: canvas.width * 0.5 },  // Above "Level up!"
+            { y: 200, width: canvas.width * 0.5 },  // Below "Level up!"
+            { y: canvas.height - 120, width: canvas.width * 0.5 }  // Below level
+        ];
+
+        horizontalLines.forEach(line => {
+            const fadeGradient = ctx.createLinearGradient(
+                canvas.width * 0.45, 0,
+                canvas.width * 0.45 + line.width, 0
             );
+            fadeGradient.addColorStop(0, '#ffffff22');
+            fadeGradient.addColorStop(1, '#ffffff00');
+            ctx.strokeStyle = fadeGradient;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width * 0.45, line.y);
+            ctx.lineTo(canvas.width * 0.45 + line.width, line.y);
+            ctx.stroke();
+        });
+
+        try {
+            // Load and draw avatar
+            const avatarURL = user.displayAvatarURL({ extension: 'png', size: 512 });
+            const avatar = await loadImage(avatarURL);
             
+            // Draw outer glow
+            const glowSize = 160;
+            const glowGradient = ctx.createRadialGradient(
+                leftSection.x, leftSection.y, 140,
+                leftSection.x, leftSection.y, glowSize
+            );
+            glowGradient.addColorStop(0, '#71FF7B22');
+            glowGradient.addColorStop(1, '#71FF7B00');
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(leftSection.x, leftSection.y, glowSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw animated circle segments with gradient effect
+            const circleRadius = 140;
+            const segments = 12; // Increased number of segments
+            const gapSize = 0.15; // Smaller gaps between segments
+            
+            const segmentGradient = ctx.createLinearGradient(
+                leftSection.x - circleRadius, leftSection.y,
+                leftSection.x + circleRadius, leftSection.y
+            );
+            segmentGradient.addColorStop(0, '#71FF7B');
+            segmentGradient.addColorStop(1, '#8BE2E7');
+            ctx.strokeStyle = segmentGradient;
+            ctx.lineWidth = 4;
+            
+            for (let i = 0; i < segments; i++) {
+                const startAngle = (i * Math.PI * 2 / segments);
+                const endAngle = startAngle + (Math.PI * 2 / segments) - gapSize;
+                
+                ctx.beginPath();
+                ctx.arc(leftSection.x, leftSection.y, circleRadius, startAngle, endAngle);
+                ctx.stroke();
+
+                // Add small dots at segment ends for detail
+                ctx.fillStyle = '#71FF7B';
+                ctx.beginPath();
+                ctx.arc(
+                    leftSection.x + Math.cos(startAngle) * circleRadius,
+                    leftSection.y + Math.sin(startAngle) * circleRadius,
+                    2, 0, Math.PI * 2
+                );
+                ctx.fill();
+            }
+
+            // Draw avatar with inner shadow
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(leftSection.x, leftSection.y, circleRadius - 10, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.drawImage(avatar, 
+                leftSection.x - (circleRadius - 10), 
+                leftSection.y - (circleRadius - 10), 
+                (circleRadius - 10) * 2, 
+                (circleRadius - 10) * 2
+            );
+
+            // Add subtle inner shadow
+            const innerShadow = ctx.createRadialGradient(
+                leftSection.x, leftSection.y, circleRadius - 40,
+                leftSection.x, leftSection.y, circleRadius - 10
+            );
+            innerShadow.addColorStop(0, '#00000000');
+            innerShadow.addColorStop(1, '#00000044');
+            ctx.fillStyle = innerShadow;
+            ctx.fill();
             ctx.restore();
         } catch (error) {
             console.error('Error loading avatar:', error);
         }
 
-        // Calculate vertical positions for centered text
-        const centerY = canvas.height / 2;
-        const verticalOffset = 40; // Shift everything down by 40px
-        const levelUpY = centerY - 130 + verticalOffset;
-        const usernameY = centerY + verticalOffset;
-        const levelY = centerY + 80 + verticalOffset;
-
-        // Draw horizontal lines with same style as vertical lines
-        ctx.strokeStyle = '#ffffff33';
-        ctx.lineWidth = 1;
-
-        // Line above "Level up!"
-        ctx.beginPath();
-        ctx.moveTo(dividerX, levelUpY - 60);
-        ctx.lineTo(1200, levelUpY - 60);
-        ctx.stroke();
-
-        // Line below "Level up!"
-        ctx.beginPath();
-        ctx.moveTo(dividerX, levelUpY + 40);
-        ctx.lineTo(1200, levelUpY + 40);
-        ctx.stroke();
-
-        // Line below level number
-        ctx.beginPath();
-        ctx.moveTo(dividerX, levelY + 40);
-        ctx.lineTo(1200, levelY + 40);
-        ctx.stroke();
-
-        // Draw "Level up!" text
-        ctx.font = '42px "GeistMono"';
-        ctx.fillStyle = '#FFFFFF';
+        // Draw text with enhanced styling
         ctx.textAlign = 'left';
-        ctx.fillText('Level up!', 500, levelUpY);
-
-        // Draw username
-        ctx.font = '84px "GeistMono"';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillText(user.username, 500, usernameY);
         
-        // Draw level
-        ctx.fillStyle = '#71FF7B';
-        ctx.fillText('lvl ' + level, 500, levelY);
+        // Draw "Level up!" with glow effect
+        const levelUpX = rightSection.x;
+        const levelUpY = 170;
+        ctx.font = '42px "GeistMono"';
+        
+        // Add text glow
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText('Level up!', levelUpX, levelUpY);
+        ctx.shadowBlur = 0;
+
+        // Draw username with gradient
+        const usernameGradient = ctx.createLinearGradient(
+            rightSection.x, rightSection.y - 40,
+            rightSection.x + 400, rightSection.y - 40
+        );
+        usernameGradient.addColorStop(0, '#FFFFFF');
+        usernameGradient.addColorStop(1, '#FFFFFFAA');
+        
+        ctx.font = '84px "GeistMono"';
+        ctx.fillStyle = usernameGradient;
+        ctx.fillText(user.username, levelUpX, rightSection.y);
+
+        // Draw level with gradient and glow
+        const levelGradient = ctx.createLinearGradient(
+            levelUpX, rightSection.y + 60,
+            levelUpX + 200, rightSection.y + 60
+        );
+        levelGradient.addColorStop(0, '#71FF7B');
+        levelGradient.addColorStop(1, '#8BE2E7');
+        
+        ctx.font = '84px "GeistMono"';
+        ctx.fillStyle = levelGradient;
+        ctx.shadowColor = '#71FF7B44';
+        ctx.shadowBlur = 15;
+        ctx.fillText('lvl ' + level, levelUpX, rightSection.y + 100);
+        ctx.shadowBlur = 0;
 
         return canvas.toBuffer();
     }
@@ -275,108 +343,146 @@ class CanvasUtils {
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw "Leaderboard" title
-        ctx.font = '42px "GeistMono"';
-        ctx.fillStyle = '#FFFFFF';
+        // Constants for table layout
+        const TABLE_TOP = 100;
+        const TABLE_LEFT = 40;
+        const TABLE_RIGHT = canvas.width - 40;
+        const TABLE_WIDTH = TABLE_RIGHT - TABLE_LEFT;
+        const ROW_HEIGHT = 80;
+        const HEADER_HEIGHT = 50;
+
+        // Draw table header background
+        ctx.fillStyle = '#ffffff08';
+        ctx.fillRect(TABLE_LEFT, TABLE_TOP, TABLE_WIDTH, HEADER_HEIGHT);
+
+        // Draw table header text
+        ctx.font = '24px "GeistMono"';
+        ctx.fillStyle = '#666666';
         ctx.textAlign = 'left';
-        ctx.fillText('Leaderboard', 80, 75);
-
-        // Draw "Rank" title
+        ctx.fillText('USER', TABLE_LEFT + 20, TABLE_TOP + 32);
         ctx.textAlign = 'right';
-        ctx.fillText('Rank', canvas.width - 80, 75);
+        ctx.fillText('PROGRESS', TABLE_RIGHT - 320, TABLE_TOP + 32);
+        ctx.fillText('LEVEL', TABLE_RIGHT - 20, TABLE_TOP + 32);
 
-        // Process users (showing 8 users now)
-        const startY = 110;
-        const entryHeight = 70;
-        const topUsers = users.slice(0, 8);
-        const leftPadding = 80;
-        const rightPadding = 80;
-        const xpBarX = canvas.width - 400;
-
-        // Draw vertical lines
-        ctx.strokeStyle = '#ffffff33';
+        // Draw header separator line
+        ctx.strokeStyle = '#ffffff11';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        // Left line
-        ctx.moveTo(leftPadding, startY);
-        ctx.lineTo(leftPadding, startY + (topUsers.length * entryHeight));
-        // Right line
-        ctx.moveTo(canvas.width - rightPadding, startY);
-        ctx.lineTo(canvas.width - rightPadding, startY + (topUsers.length * entryHeight));
-        // XP bar line
-        ctx.moveTo(xpBarX - 30, startY);
-        ctx.lineTo(xpBarX - 30, startY + (topUsers.length * entryHeight));
+        ctx.moveTo(TABLE_LEFT, TABLE_TOP + HEADER_HEIGHT);
+        ctx.lineTo(TABLE_RIGHT, TABLE_TOP + HEADER_HEIGHT);
         ctx.stroke();
 
-        // Rank colors
+        // Draw vertical separators
+        ctx.strokeStyle = '#ffffff11';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        // Progress bar section separator
+        ctx.moveTo(TABLE_RIGHT - 400, TABLE_TOP);
+        ctx.lineTo(TABLE_RIGHT - 400, TABLE_TOP + HEADER_HEIGHT + (ROW_HEIGHT * users.length));
+        // Level section separator
+        ctx.moveTo(TABLE_RIGHT - 150, TABLE_TOP);
+        ctx.lineTo(TABLE_RIGHT - 150, TABLE_TOP + HEADER_HEIGHT + (ROW_HEIGHT * users.length));
+        ctx.stroke();
+
+        // Define colors for different ranks
         const rankColors = {
-            0: '#71FF7B', // Brand green for #1
-            1: '#7B94FF', // Brand blue for #2
-            2: '#C77BFF', // Brand purple for #3
+            0: '#71FF7B', // 1st place - green
+            1: '#7B94FF', // 2nd place - blue
+            2: '#C77BFF', // 3rd place - purple
+            default: '#FFFFFF' // Default color
         };
 
-        for (let i = 0; i < topUsers.length; i++) {
-            const user = topUsers[i];
-            const y = startY + (i * entryHeight);
+        // Process each user
+        for (let i = 0; i < users.length; i++) {
+            const user = users[i];
+            const rowY = TABLE_TOP + HEADER_HEIGHT + (i * ROW_HEIGHT);
+            const color = rankColors[i] || rankColors.default;
 
-            // Draw horizontal line above entry
-            ctx.strokeStyle = '#ffffff33';
-            ctx.beginPath();
-            ctx.moveTo(leftPadding, y);
-            ctx.lineTo(canvas.width - rightPadding, y);
-            ctx.stroke();
+            // Draw row background (alternating)
+            if (i % 2 === 0) {
+                ctx.fillStyle = '#ffffff04';
+                ctx.fillRect(TABLE_LEFT, rowY, TABLE_WIDTH, ROW_HEIGHT);
+            }
 
             try {
-                // Draw avatar
-                const avatar = await loadImage(user.displayAvatarURL());
-                const avatarSize = 40;
-                const avatarX = leftPadding + 30;
-                const avatarY = y + (entryHeight - avatarSize) / 2 + 5;
-                
-                // Create circular clip for avatar
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(avatarX + avatarSize/2, avatarY + avatarSize/2, avatarSize/2, 0, Math.PI * 2);
-                ctx.clip();
-                ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
-                ctx.restore();
+                // Load and draw avatar
+                if (user.avatarURL) {
+                    const avatar = await loadImage(user.avatarURL);
+                    const avatarSize = 40;
+                    const avatarX = TABLE_LEFT + 20;
+                    const avatarY = rowY + (ROW_HEIGHT - avatarSize) / 2;
+
+                    // Draw avatar background/border
+                    ctx.beginPath();
+                    ctx.arc(avatarX + avatarSize/2, avatarY + avatarSize/2, avatarSize/2 + 2, 0, Math.PI * 2);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+
+                    // Draw avatar
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(avatarX + avatarSize/2, avatarY + avatarSize/2, avatarSize/2, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
+                    ctx.restore();
+                }
             } catch (error) {
                 console.error('Error loading avatar:', error);
             }
 
-            // Draw username with rank color for top 3
-            ctx.font = '32px "GeistMono"';
-            ctx.fillStyle = rankColors[i] || '#FFFFFF';
+            // Draw username
+            ctx.font = '28px "GeistMono"';
+            ctx.fillStyle = color;
             ctx.textAlign = 'left';
-            ctx.fillText('#' + user.username, leftPadding + 100, y + 45);
+            ctx.fillText(user.username, TABLE_LEFT + 80, rowY + (ROW_HEIGHT/2) + 10);
 
-            // Draw level text
-            const levelText = 'lvl ' + user.level;
-            ctx.font = '32px "GeistMono"';
+            // Draw level
             ctx.textAlign = 'right';
-            ctx.fillText(levelText, canvas.width - rightPadding - 20, y + 42);
+            ctx.fillStyle = color;
+            ctx.fillText(`lvl ${user.level}`, TABLE_RIGHT - 20, rowY + (ROW_HEIGHT/2) + 10);
 
-            // Draw progress bar
-            const barWidth = 300;
-            const barHeight = 6;
-            const barX = xpBarX;
-            const barY = y + 62;
+            // Draw XP progress
+            const progressWidth = 250;
+            const progressHeight = 6;
+            const progressX = TABLE_RIGHT - 370;
+            const progressY = rowY + (ROW_HEIGHT/2) + 10;
             const progress = user.xp / user.nextLevelXP;
 
-            // Draw background bar
-            ctx.fillStyle = '#ffffff33';
-            ctx.fillRect(barX, barY, barWidth, barHeight);
+            // Draw XP text
+            ctx.font = '20px "GeistMono"';
+            ctx.fillStyle = '#8BE2E7';
+            ctx.textAlign = 'left';
+            ctx.fillText(`${user.xp}/${user.nextLevelXP} XP`, progressX, progressY - 15);
 
-            // Draw progress
-            ctx.fillStyle = '#71FF7B';
-            ctx.fillRect(barX, barY, barWidth * progress, barHeight);
+            // Draw progress bar background
+            ctx.fillStyle = '#ffffff11';
+            ctx.fillRect(progressX, progressY, progressWidth, progressHeight);
+
+            // Draw progress bar
+            ctx.fillStyle = color;
+            ctx.fillRect(progressX, progressY, progressWidth * Math.min(progress, 1), progressHeight);
+
+            // Draw row separator
+            if (i < users.length - 1) {
+                ctx.strokeStyle = '#ffffff11';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(TABLE_LEFT, rowY + ROW_HEIGHT);
+                ctx.lineTo(TABLE_RIGHT, rowY + ROW_HEIGHT);
+                ctx.stroke();
+            }
         }
 
-        // Draw final horizontal line
-        ctx.strokeStyle = '#ffffff33';
-        ctx.beginPath();
-        ctx.moveTo(leftPadding, startY + (topUsers.length * entryHeight));
-        ctx.lineTo(canvas.width - rightPadding, startY + (topUsers.length * entryHeight));
-        ctx.stroke();
+        // Draw table border
+        ctx.strokeStyle = '#ffffff11';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(TABLE_LEFT, TABLE_TOP, TABLE_WIDTH, HEADER_HEIGHT + (ROW_HEIGHT * users.length));
+
+        // Draw title above table
+        ctx.font = '42px "GeistMono"';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'left';
+        ctx.fillText('Leaderboard', TABLE_LEFT, TABLE_TOP - 20);
 
         return canvas.toBuffer();
     }

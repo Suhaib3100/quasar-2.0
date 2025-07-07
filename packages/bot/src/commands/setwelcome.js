@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { getDefaultPool } = require('discord-moderation-shared');
+const { SPECIAL_USER_ID } = require('../utils/permissionUtils');
 const db = getDefaultPool();
 
 module.exports = {
@@ -9,10 +10,17 @@ module.exports = {
         .addChannelOption(option =>
             option.setName('channel')
                 .setDescription('The channel to send welcome messages')
-                .setRequired(true))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+                .setRequired(true)),
 
     async execute(interaction) {
+        // Check permissions first
+        if (interaction.user.id !== SPECIAL_USER_ID && !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+            return interaction.reply({
+                content: 'You do not have permission to use this command.',
+                ephemeral: true
+            });
+        }
+
         const channel = interaction.options.getChannel('channel');
         
         try {

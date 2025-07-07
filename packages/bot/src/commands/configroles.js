@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { getDefaultPool } = require('discord-moderation-shared');
+const { SPECIAL_USER_ID } = require('../utils/permissionUtils');
 const db = getDefaultPool();
 
 module.exports = {
@@ -36,10 +37,17 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('list')
-                .setDescription('List all role-level mappings'))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+                .setDescription('List all role-level mappings')),
 
     async execute(interaction) {
+        // Check permissions first
+        if (interaction.user.id !== SPECIAL_USER_ID && !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+            return interaction.reply({
+                content: 'You do not have permission to use this command.',
+                ephemeral: true
+            });
+        }
+
         try {
             const subcommand = interaction.options.getSubcommand();
 
