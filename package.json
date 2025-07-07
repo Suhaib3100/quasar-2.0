@@ -1,0 +1,31 @@
+{
+  "name": "quasar-bot",
+  "version": "1.0.0",
+  "description": "A professional Discord bot with advanced leveling system",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "leveling",
+    "xp"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "canvas": "^3.1.0",
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.2",
+    "mongoose": "^7.5.0",
+    "path": "^0.12.7",
+    "pg": "^8.13.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

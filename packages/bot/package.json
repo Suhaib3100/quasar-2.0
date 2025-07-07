@@ -1,0 +1,24 @@
+{
+  "name": "discord-moderation-bot",
+  "version": "1.0.0",
+  "description": "Discord moderation bot with XP system and role management",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "deploy": "node src/deploy-commands.js"
+  },
+  "dependencies": {
+    "@discordjs/rest": "^1.7.1",
+    "axios": "^1.7.9",
+    "canvas": "^3.1.0",
+    "discord-moderation-shared": "file:../../shared",
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.2",
+    "pg": "^8.13.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
