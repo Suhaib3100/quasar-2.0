@@ -6,6 +6,10 @@ const { getDefaultPool } = require('discord-moderation-shared');
 const pool = getDefaultPool();
 const express = require('express');
 const moderationRoutes = require('./api/moderation');
+const { loadFonts } = require('./utils/fontLoader');
+
+// Load fonts first
+loadFonts();
 
 // Initialize Express app
 const app = express();
