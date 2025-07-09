@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
+    const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const { getDefaultPool } = require('discord-moderation-shared');
 const { createCanvas, loadImage } = require('canvas');
 const db = getDefaultPool();
