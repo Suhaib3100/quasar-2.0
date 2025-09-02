@@ -21,7 +21,8 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildVoiceStates
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildModeration
     ]
 });
 
@@ -100,7 +101,7 @@ client.on('interactionCreate', async interaction => {
 });
 
 // Start the API server
-const PORT = process.env.BOT_API_PORT || 3001;
+const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Bot API server running on port ${PORT}`);
 });

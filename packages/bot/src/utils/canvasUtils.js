@@ -148,6 +148,11 @@ class CanvasUtils {
         ctx.fillStyle = '#FFFFFF';
         ctx.fillText(`${project.likes_count || 0}`, barX + barWidth + 20, statsY + 50);
 
+        // Add subtle border glow for premium effect
+        ctx.strokeStyle = '#71FF7B22';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+        
         return canvas.toBuffer();
     }
 
@@ -162,12 +167,25 @@ class CanvasUtils {
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Add subtle background pattern
-        ctx.fillStyle = '#ffffff05';
-        for (let i = 0; i < canvas.width; i += 30) {
-            for (let j = 0; j < canvas.height; j += 30) {
-                ctx.fillRect(i, j, 1, 1);
+        // Add subtle background pattern with animated dots
+        ctx.fillStyle = '#ffffff08';
+        for (let i = 0; i < canvas.width; i += 40) {
+            for (let j = 0; j < canvas.height; j += 40) {
+                ctx.beginPath();
+                ctx.arc(i, j, 1, 0, Math.PI * 2);
+                ctx.fill();
             }
+        }
+        
+        // Add floating particles for premium effect
+        ctx.fillStyle = '#71FF7B15';
+        for (let i = 0; i < 20; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const size = Math.random() * 3 + 1;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
         }
 
         // Calculate positions
@@ -293,13 +311,23 @@ class CanvasUtils {
         // Draw text with enhanced styling
         ctx.textAlign = 'left';
         
-        // Draw "Level up!" with glow effect
+        // Draw "Level up!" with enhanced glow effect
         const levelUpX = rightSection.x;
         const levelUpY = 170;
-        ctx.font = '42px "GeistMono"';
+        ctx.font = 'bold 48px "GeistMono"';
         
-        // Add text glow
-        ctx.shadowColor = '#ffffff';
+        // Add multiple text glow layers for premium effect
+        ctx.shadowColor = '#71FF7B';
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = '#71FF7B';
+        ctx.fillText('Level up!', levelUpX, levelUpY);
+        
+        ctx.shadowColor = '#8BE2E7';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = '#8BE2E7';
+        ctx.fillText('Level up!', levelUpX, levelUpY);
+        
+        ctx.shadowColor = '#FFFFFF';
         ctx.shadowBlur = 10;
         ctx.fillStyle = '#FFFFFF';
         ctx.fillText('Level up!', levelUpX, levelUpY);
@@ -317,18 +345,37 @@ class CanvasUtils {
         ctx.fillStyle = usernameGradient;
         ctx.fillText(user.username, levelUpX, rightSection.y);
 
-        // Draw level with gradient and glow
+        // Draw level with enhanced gradient and glow
         const levelGradient = ctx.createLinearGradient(
             levelUpX, rightSection.y + 60,
             levelUpX + 200, rightSection.y + 60
         );
         levelGradient.addColorStop(0, '#71FF7B');
-        levelGradient.addColorStop(1, '#8BE2E7');
+        levelGradient.addColorStop(0.5, '#8BE2E7');
+        levelGradient.addColorStop(1, '#FFD700');
         
-        ctx.font = '84px "GeistMono"';
+        // Add celebration sparkles around the level
+        ctx.fillStyle = '#FFD700';
+        for (let i = 0; i < 8; i++) {
+            const angle = (i * Math.PI * 2) / 8;
+            const sparkleX = levelUpX + 100 + Math.cos(angle) * 80;
+            const sparkleY = rightSection.y + 100 + Math.sin(angle) * 80;
+            const size = Math.random() * 4 + 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(sparkleX - size, sparkleY);
+            ctx.lineTo(sparkleX + size, sparkleY);
+            ctx.moveTo(sparkleX, sparkleY - size);
+            ctx.lineTo(sparkleX, sparkleY + size);
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        ctx.font = 'bold 84px "GeistMono"';
         ctx.fillStyle = levelGradient;
         ctx.shadowColor = '#71FF7B44';
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 20;
         ctx.fillText('lvl ' + level, levelUpX, rightSection.y + 100);
         ctx.shadowBlur = 0;
 

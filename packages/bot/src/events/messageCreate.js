@@ -1,8 +1,7 @@
-const { Collection } = require('discord.js');
-const { Pool } = require('pg');
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL
-});
+const { Collection, AttachmentBuilder } = require('discord.js');
+const { getDefaultPool } = require('discord-moderation-shared');
+const { CanvasUtils } = require('../utils/canvasUtils');
+const pool = getDefaultPool();
 
 module.exports = {
     name: 'messageCreate',
@@ -31,7 +30,7 @@ module.exports = {
 
             // Update or create user XP in database
             const result = await pool.query(
-                'INSERT INTO users (user_id, guild_id, xp, level) VALUES ($1, $2, $3, 1) ON CONFLICT (user_id, guild_id) DO UPDATE SET xp = users.xp + $3 RETURNING xp, level',
+                'INSERT INTO users (user_id, guild_id, xp, level, message_count) VALUES ($1, $2, $3, 1, 1) ON CONFLICT (user_id, guild_id) DO UPDATE SET xp = users.xp + $3, message_count = users.message_count + 1, updated_at = CURRENT_TIMESTAMP RETURNING xp, level',
                 [message.author.id, message.guild.id, xpGain]
             );
 
@@ -40,8 +39,23 @@ module.exports = {
 
             // Level up
             if (newLevel > level) {
-                await pool.query('UPDATE users SET level = $1 WHERE user_id = $2', [newLevel, message.author.id]);
-                message.channel.send(`Congratulations ${message.author}! You've reached level ${newLevel}! 🎉`);
+                await pool.query('UPDATE users SET level = $1 WHERE user_id = $2 AND guild_id = $3', [newLevel, message.author.id, message.guild.id]);
+                
+                try {
+                    // Generate beautiful level-up image
+                    const levelUpImage = await CanvasUtils.createLevelUpImage(message.author, newLevel);
+                    const attachment = new AttachmentBuilder(levelUpImage, { name: 'levelup.png' });
+                    
+                    // Send level-up message with image
+                    await message.channel.send({
+                        content: `🎉 **Congratulations ${message.author}!** You've reached **Level ${newLevel}**! 🚀`,
+                        files: [attachment]
+                    });
+                } catch (imageError) {
+                    console.error('Error generating level-up image:', imageError);
+                    // Fallback to text message if image generation fails
+                    await message.channel.send(`🎉 **Congratulations ${message.author}!** You've reached **Level ${newLevel}**! 🚀`);
+                }
             }
 
             // Set cooldown

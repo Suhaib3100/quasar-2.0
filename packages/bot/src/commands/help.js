@@ -51,6 +51,34 @@ const categories = {
             { name: '/configchannels', description: 'Set up server channels', usage: '/configchannels', example: 'Configure welcome, rules channels etc.' },
             { name: '/configroles', description: 'Configure server roles', usage: '/configroles', example: 'Set up automatic role assignment' }
         ]
+    },
+    moderation: {
+        emoji: '🛡️',
+        name: 'Moderation & Management',
+        color: '#E74C3C',
+        description: 'Advanced moderation and user management tools',
+        commands: [
+            { name: '/ban', description: 'Ban a user from the server', usage: '/ban <user> [reason] [days]', example: 'Ban user with optional reason and message deletion' },
+            { name: '/kick', description: 'Kick a user from the server', usage: '/kick <user> [reason]', example: 'Remove user temporarily with reason' },
+            { name: '/timeout', description: 'Timeout/mute a user temporarily', usage: '/timeout <user> <duration> [reason]', example: 'Mute user for specified duration' },
+            { name: '/role add/remove', description: 'Manage user roles', usage: '/role <add/remove> <user> <role> [reason]', example: 'Add or remove roles from users' },
+            { name: '/warn', description: 'Warn a user with severity levels', usage: '/warn <user> [reason] [severity]', example: 'Issue warnings with tracking' },
+            { name: '/warnings', description: 'View user warnings', usage: '/warnings <user>', example: 'Check warning history for user' },
+            { name: '/clearwarnings', description: 'Clear user warnings', usage: '/clearwarnings <user> [reason]', example: 'Remove all warnings for user' },
+            { name: '/modlog', description: 'View moderation logs', usage: '/modlog [user] [action] [limit]', example: 'Browse moderation history' }
+        ]
+    },
+    admin: {
+        emoji: '👑',
+        name: 'Administrative',
+        color: '#F39C12',
+        description: 'High-level administrative commands',
+        commands: [
+            { name: '/manipulaterank', description: 'Manipulate user rank and XP', usage: '/manipulaterank <user> <action> [amount] [reason]', example: 'Increase/decrease levels, XP, or reset ranks' },
+            { name: '/setlevel', description: 'Set user level directly', usage: '/setlevel <user> <level> [reason]', example: 'Set specific level for user' },
+            { name: '/reset', description: 'Reset user progress', usage: '/reset <user> [reason]', example: 'Reset user XP and level to 0' },
+            { name: '/botperms', description: 'Check bot permissions in server', usage: '/botperms', example: 'Debug bot permission issues' }
+        ]
     }
 };
 
@@ -67,7 +95,10 @@ module.exports = {
                     { name: '🛠️ Skills & Badges', value: 'skills' },
                     { name: '📈 Leveling & Progress', value: 'leveling' },
                     { name: '🐙 GitHub Integration', value: 'github' },
-                    { name: '⚙️ Configuration', value: 'config' }
+                    { name: '⚙️ Configuration', value: 'config' },
+                    { name: '🛡️ Moderation & Management', value: 'moderation' },
+                    { name: '👑 Administrative', value: 'admin' },
+                    { name: '🔧 Debug & Tools', value: 'debug' }
                 )),
 
     async execute(interaction) {
