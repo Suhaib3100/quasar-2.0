@@ -77,7 +77,8 @@ const categories = {
             { name: '/manipulaterank', description: 'Manipulate user rank and XP', usage: '/manipulaterank <user> <action> [amount] [reason]', example: 'Increase/decrease levels, XP, or reset ranks' },
             { name: '/setlevel', description: 'Set user level directly', usage: '/setlevel <user> <level> [reason]', example: 'Set specific level for user' },
             { name: '/reset', description: 'Reset user progress', usage: '/reset <user> [reason]', example: 'Reset user XP and level to 0' },
-            { name: '/botperms', description: 'Check bot permissions in server', usage: '/botperms', example: 'Debug bot permission issues' }
+            { name: '/botperms', description: 'Check bot permissions in server', usage: '/botperms', example: 'Debug bot permission issues' },
+            { name: '/testperms', description: 'Test permission system for debugging', usage: '/testperms', example: 'Debug user permission issues' }
         ]
     }
 };
