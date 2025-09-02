@@ -38,7 +38,7 @@ module.exports = {
                     option.setName('reason')
                         .setDescription('Reason for removing the role')
                         .setRequired(false)))
-        .setDefaultMemberPermissions(0), // Allow all users to see the command, but check permissions in execute
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles), // Discord permission requirement
 
     async execute(interaction) {
         // Check permissions

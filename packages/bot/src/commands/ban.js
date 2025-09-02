@@ -20,7 +20,7 @@ module.exports = {
                 .setMinValue(0)
                 .setMaxValue(7)
                 .setRequired(false))
-        .setDefaultMemberPermissions(0), // Visible to everyone, permissions checked in execute
+        .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers), // Discord permission requirement
 
     async execute(interaction) {
         // Check permissions

@@ -1,5 +1,6 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const { getDefaultPool } = require('discord-moderation-shared');
+const CanvasUtils = require('../utils/canvasUtils');
 const db = getDefaultPool();
 const RoleManager = require('../utils/roleManager');
 
@@ -40,49 +41,46 @@ module.exports = {
             
             const nextLevelXP = Math.floor(100 * Math.pow(1.5, userLevel));
             const progress = nextLevelXP > 0 ? (userXP / nextLevelXP) * 100 : 0;
-            const progressBar = createProgressBar(progress);
 
-            const embed = new EmbedBuilder()
-                .setColor('#2F3136')
-                .setAuthor({
-                    name: interaction.user.username,
-                    iconURL: interaction.user.displayAvatarURL({ dynamic: true })
-                })
-                .setTitle('🏆 Rank Card')
-                .addFields(
-                    { name: 'Level', value: userLevel.toString(), inline: true },
-                    { name: 'XP', value: `${userXP}/${nextLevelXP}`, inline: true },
-                    { name: 'Messages', value: userMessageCount.toString(), inline: true },
-                    { name: 'Progress', value: progressBar }
-                );
-
-            // Get current role information
-            const roleResult = await db.query(
-                'SELECT * FROM role_rewards WHERE guild_id = $1 AND required_level <= $2 ORDER BY required_level DESC LIMIT 1',
-                [interaction.guild.id, userLevel]
+            // Get user's rank in the server
+            const rankResult = await db.query(
+                'SELECT COUNT(*) + 1 as rank FROM users WHERE guild_id = $1 AND (level > $2 OR (level = $2 AND xp > $3))',
+                [interaction.guild.id, userLevel, userXP]
             );
+            const userRank = rankResult.rows[0]?.rank || 1;
 
-            if (roleResult.rows.length > 0) {
-                const currentRole = roleResult.rows[0];
-                embed.addFields({ name: 'Current Role', value: currentRole.level_name, inline: true });
+            // Prepare user data for the rank card
+            const userData = {
+                level: userLevel,
+                xp: userXP,
+                nextLevelXP: nextLevelXP,
+                messageCount: userMessageCount,
+                rank: userRank
+            };
 
-                // Get next role information
-                const nextRoleResult = await db.query(
-                    'SELECT * FROM role_rewards WHERE guild_id = $1 AND required_level > $2 ORDER BY required_level ASC LIMIT 1',
-                    [interaction.guild.id, userLevel]
-                );
+            try {
+                // Generate beautiful rank card image
+                const rankCanvas = await CanvasUtils.createRankCard(interaction.user, userData, interaction.guild.name);
+                const rankBuffer = rankCanvas.toBuffer('image/png');
+                const rankAttachment = new AttachmentBuilder(rankBuffer, { name: 'rank-card.png' });
 
-                if (nextRoleResult.rows.length > 0) {
-                    const nextRole = nextRoleResult.rows[0];
-                    const levelsUntilNext = nextRole.required_level - userLevel;
-                    embed.addFields({ name: 'Next Role', value: `${nextRole.level_name} (in ${levelsUntilNext} levels)`, inline: true });
-                }
+                await interaction.editReply({
+                    content: `🏆 **${interaction.user.username}**'s Rank Card`,
+                    files: [rankAttachment]
+                });
+            } catch (imageError) {
+                console.error('Error generating rank card image:', imageError);
+                
+                // Fallback to text-based response if image generation fails
+                const fallbackMessage = `🏆 **${interaction.user.username}**'s Rank Card\n\n` +
+                    `**Level:** ${userLevel}\n` +
+                    `**XP:** ${userXP}/${nextLevelXP}\n` +
+                    `**Messages:** ${userMessageCount}\n` +
+                    `**Rank:** #${userRank}\n` +
+                    `**Progress:** ${progress.toFixed(1)}% to next level`;
+
+                await interaction.editReply(fallbackMessage);
             }
-
-            embed.setFooter({ text: `${progress.toFixed(1)}% to next level` })
-                .setTimestamp();
-
-            await interaction.editReply({ embeds: [embed] });
         } catch (error) {
             console.error('Error in rank command:', error);
             let errorMessage = 'There was an error while fetching your rank!';
@@ -102,10 +100,3 @@ module.exports = {
     }
 };
 
-function createProgressBar(progress) {
-    // Ensure progress is between 0 and 100
-    const clampedProgress = Math.max(0, Math.min(100, progress));
-    const filledSquares = Math.floor(clampedProgress / 10);
-    const emptySquares = 10 - filledSquares;
-    return '█'.repeat(filledSquares) + '░'.repeat(emptySquares);
-}

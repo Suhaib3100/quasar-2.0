@@ -31,7 +31,7 @@ module.exports = {
             option.setName('reason')
                 .setDescription('Reason for the manipulation')
                 .setRequired(false))
-        .setDefaultMemberPermissions(0), // Allow all users to see the command, but check permissions in execute
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator), // Discord permission requirement
 
     async execute(interaction) {
         // Check permissions

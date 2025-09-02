@@ -14,8 +14,7 @@ for (const file of commandFiles) {
     if ('data' in command && 'execute' in command) {
         // Make all commands visible by default
         const commandData = command.data.toJSON();
-        // Force all commands to be visible to everyone (0 = no restrictions)
-        commandData.default_member_permissions = "0";
+        // Keep the permission settings as defined in each command
         commands.push(commandData);
         console.log(`Loaded command: ${command.data.name}`);
     } else {

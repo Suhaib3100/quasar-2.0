@@ -28,7 +28,7 @@ module.exports = {
                 .setMinValue(1)
                 .setMaxValue(25)
                 .setRequired(false))
-        .setDefaultMemberPermissions(0), // Allow all users to see the command, but check permissions in execute
+        .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers), // Discord permission requirement
 
     async execute(interaction) {
         // Check permissions

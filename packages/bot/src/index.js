@@ -101,7 +101,7 @@ client.on('interactionCreate', async interaction => {
 });
 
 // Start the API server
-const PORT = 3000;
+const PORT = 3001;
 app.listen(PORT, () => {
     console.log(`Bot API server running on port ${PORT}`);
 });

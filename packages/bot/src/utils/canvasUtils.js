@@ -2,6 +2,198 @@ const { createCanvas, loadImage, registerFont } = require('canvas');
 const path = require('path');
 
 class CanvasUtils {
+    static async createRankCard(user, userData, guildName) {
+        const canvas = createCanvas(800, 400);
+        const ctx = canvas.getContext('2d');
+
+        // Create gradient background
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#1a1a2e');
+        gradient.addColorStop(0.5, '#16213e');
+        gradient.addColorStop(1, '#0f3460');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Add subtle pattern overlay
+        ctx.strokeStyle = '#ffffff08';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < canvas.width; i += 30) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, canvas.height);
+            ctx.stroke();
+        }
+        for (let i = 0; i < canvas.height; i += 30) {
+            ctx.beginPath();
+            ctx.moveTo(0, i);
+            ctx.lineTo(canvas.width, i);
+            ctx.stroke();
+        }
+
+        // Add floating particles
+        ctx.fillStyle = '#71FF7B20';
+        for (let i = 0; i < 15; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const size = Math.random() * 3 + 1;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw border glow
+        ctx.strokeStyle = '#71FF7B40';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+
+        // Load and draw user avatar
+        try {
+            const avatar = await loadImage(user.displayAvatarURL({ format: 'png', size: 128 }));
+            const avatarSize = 120;
+            const avatarX = 50;
+            const avatarY = 50;
+
+            // Create circular avatar with glow
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(avatarX + avatarSize/2, avatarY + avatarSize/2, avatarSize/2 + 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#71FF7B40';
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(avatarX + avatarSize/2, avatarY + avatarSize/2, avatarSize/2, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
+            ctx.restore();
+        } catch (error) {
+            console.log('Could not load avatar, using fallback');
+            // Draw fallback avatar
+            ctx.fillStyle = '#71FF7B';
+            ctx.beginPath();
+            ctx.arc(110, 110, 60, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // User info section
+        const infoX = 200;
+        const infoY = 60;
+
+        // Username with glow effect
+        ctx.font = 'bold 32px "GeistMono"';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'left';
+        ctx.fillText(user.username, infoX, infoY);
+
+        // Guild name
+        ctx.font = '20px "GeistMono"';
+        ctx.fillStyle = '#8BE2E7';
+        ctx.fillText(guildName, infoX, infoY + 35);
+
+        // Level display with celebration effect
+        const levelX = 600;
+        const levelY = 80;
+        
+        // Level background circle
+        ctx.fillStyle = '#71FF7B20';
+        ctx.beginPath();
+        ctx.arc(levelX, levelY, 50, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Level text with gradient
+        ctx.font = 'bold 48px "GeistMono"';
+        ctx.fillStyle = '#71FF7B';
+        ctx.textAlign = 'center';
+        ctx.fillText(userData.level.toString(), levelX, levelY + 15);
+
+        // Add sparkles around level
+        ctx.fillStyle = '#FFD700';
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const x = levelX + Math.cos(angle) * 70;
+            const y = levelY + Math.sin(angle) * 70;
+            const size = Math.random() * 4 + 2;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // XP and progress section
+        const progressX = 50;
+        const progressY = 220;
+        const progressWidth = 700;
+        const progressHeight = 30;
+
+        // Progress bar background
+        ctx.fillStyle = '#ffffff20';
+        ctx.fillRect(progressX, progressY, progressWidth, progressHeight);
+
+        // Progress bar fill with gradient
+        const progress = userData.nextLevelXP > 0 ? (userData.xp / userData.nextLevelXP) * 100 : 0;
+        const clampedProgress = Math.max(0, Math.min(100, progress));
+        const fillWidth = (clampedProgress / 100) * progressWidth;
+        
+        const progressGradient = ctx.createLinearGradient(progressX, 0, progressX + fillWidth, 0);
+        progressGradient.addColorStop(0, '#71FF7B');
+        progressGradient.addColorStop(0.5, '#8BE2E7');
+        progressGradient.addColorStop(1, '#FFD700');
+        
+        ctx.fillStyle = progressGradient;
+        ctx.fillRect(progressX, progressY, fillWidth, progressHeight);
+
+        // Progress bar border
+        ctx.strokeStyle = '#71FF7B';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(progressX, progressY, progressWidth, progressHeight);
+
+        // Progress text
+        ctx.font = 'bold 24px "GeistMono"';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${userData.xp} / ${userData.nextLevelXP} XP`, progressX, progressY + 55);
+        ctx.fillText(`${clampedProgress.toFixed(1)}% to next level`, progressX, progressY + 80);
+
+        // Stats section
+        const statsY = 320;
+        const statSpacing = 200;
+
+        // XP stat
+        ctx.font = 'bold 20px "GeistMono"';
+        ctx.fillStyle = '#8BE2E7';
+        ctx.textAlign = 'center';
+        ctx.fillText('Total XP', 150, statsY);
+        ctx.font = '24px "GeistMono"';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(userData.xp.toString(), 150, statsY + 25);
+
+        // Messages stat
+        ctx.fillStyle = '#8BE2E7';
+        ctx.font = 'bold 20px "GeistMono"';
+        ctx.fillText('Messages', 350, statsY);
+        ctx.font = '24px "GeistMono"';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(userData.messageCount.toString(), 350, statsY + 25);
+
+        // Rank stat
+        ctx.fillStyle = '#8BE2E7';
+        ctx.font = 'bold 20px "GeistMono"';
+        ctx.fillText('Rank', 550, statsY);
+        ctx.font = '24px "GeistMono"';
+        ctx.fillText(`#${userData.rank || 'N/A'}`, 550, statsY + 25);
+
+        // Add animated dots effect
+        ctx.fillStyle = '#71FF7B';
+        for (let i = 0; i < 3; i++) {
+            const x = 650 + (i * 20);
+            const y = statsY + 15;
+            const size = Math.random() * 4 + 2;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        return canvas;
+    }
+
     static async createProjectShowcaseImage(project, user) {
         const canvas = createCanvas(1280, 720); // Same size as leaderboard
         const ctx = canvas.getContext('2d');
